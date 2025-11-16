@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, message, Popconfirm } from 'antd';
 import axios from 'axios';
 
 const { Column } = Table;
@@ -32,7 +32,7 @@ export default function Students() {
   const handleSubmit = async (values) => {
     try {
       if (editingStudent) {
-        await axios.put(`/api/students?id=${editingStudent.id}`, values);
+        await axios.put(`/api/students/${editingStudent.id}`, values);
         message.success('Student updated');
       } else {
         await axios.post('/api/students', values);
@@ -58,6 +58,7 @@ export default function Students() {
     form.setFieldsValue({
       name: record.name,
       nis: record.nis,
+      age: record.age,
       class: record.class_name,
       major: record.major,
     });
@@ -66,7 +67,7 @@ export default function Students() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/students?id=${id}`);
+      await axios.delete(`/api/students/${id}`);
       message.success('Student deleted');
       fetchStudents(); // Refresh list
     } catch (e) {
@@ -75,15 +76,14 @@ export default function Students() {
   };
 
   const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.major.toLowerCase().includes(searchTerm.toLowerCase())
+    student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div style={{ padding: 24 }}>
       <h1>Students</h1>
       <Input
-        placeholder="Search by name or major"
+        placeholder="Search by name"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         style={{ marginBottom: 16, width: 300 }}
@@ -95,6 +95,7 @@ export default function Students() {
       <Table dataSource={filteredStudents} loading={loading} rowKey="id" pagination={{ pageSize: 10 }}>
         <Column title="Name" dataIndex="name" key="name" sorter={(a, b) => a.name.localeCompare(b.name)} />
         <Column title="NIS" dataIndex="nis" key="nis" />
+        <Column title="Age" dataIndex="age" key="age" sorter={(a, b) => (a.age || 0) - (b.age || 0)} />
         <Column title="Class" dataIndex="class_name" key="class_name" sorter={(a, b) => (a.class_name || '').localeCompare(b.class_name || '')} />
         <Column title="Major" dataIndex="major" key="major" />
         <Column
@@ -131,16 +132,19 @@ export default function Students() {
         footer={null}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical">
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Name is required' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="nis" label="NIS" rules={[{ required: true }]}>
+          <Form.Item name="nis" label="NIS" rules={[{ required: true, message: 'NIS is required' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="class" label="Class" rules={[{ required: true }]}>
+          <Form.Item name="age" label="Age" rules={[{ required: true, type: 'number', min: 1, message: 'Age must be a number ≥ 1' }]}>
+            <InputNumber />
+          </Form.Item>
+          <Form.Item name="class" label="Class" rules={[{ required: true, message: 'Class is required' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="major" label="Major" rules={[{ required: true }]}>
+          <Form.Item name="major" label="Major" rules={[{ required: true, message: 'Major is required' }]}>
             <Input />
           </Form.Item>
           <Form.Item>
